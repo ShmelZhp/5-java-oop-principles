@@ -1,14 +1,9 @@
 package com.example.task04;
 
-public class ConsoleHandler implements MessageHandler{
-
+public class ConsoleHandler implements MessageHandler {
+    //выводит сообщение
     @Override
-    public void publish(String formattedMessage) {
-        System.out.println(formattedMessage);
-    }
-
-    @Override
-    public void close() {
-
+    public void log(String message){
+        System.out.println(message);
     }
 }

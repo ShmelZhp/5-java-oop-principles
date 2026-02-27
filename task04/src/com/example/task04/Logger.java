@@ -1,108 +1,96 @@
 package com.example.task04;
 
-import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Logger {
-
-
-
-    public enum Level {
-        DEBUG, INFO, WARNING, ERROR
-    }
-
     private final String name;
-    private static final Map<String, Logger> loggers = new HashMap<>();
-    private static final ReentrantLock lock = new ReentrantLock();
-    private Level level = Level.DEBUG;
-    private MessageHandler handler; // Добавлен обработчик
+    private static ArrayList<Logger> loggersList;
+    private LogLevel logLevel;
 
-    private Logger(String name) {
+    public Logger(String name){
         this.name = name;
     }
 
-    public String getName() {
+    public enum LogLevel {
+        DEBUG,
+        INFO,
+        WARNING,
+        ERROR
+    }
+
+    public Logger(){
+        this.name = "Logger";
+    }
+
+    public String getName(){
         return name;
     }
 
-    public static Logger getLogger(String nickName) {
-        lock.lock();
-        try {
-            Logger logger = loggers.get(nickName);
-            if (logger == null) {
-                logger = new Logger(nickName);
-                loggers.put(nickName, logger);
-            }
-            return logger;
-        } finally {
-            lock.unlock();
+    public static Logger getLogger(String name){
+        for(Logger i : loggersList){
+            if(i.name.equals(name))
+                return i;
         }
+        Logger logger = new Logger(name);
+        loggersList.add(logger);
+        return logger;
     }
 
-    public void setLevel(Level level) {
-        this.level = level;
+    public void error(String message){
+        log(LogLevel.ERROR, message);
     }
 
-    public Level getLevel() {
-        return level;
+    public void error(String format, Object... args){
+        log(LogLevel.ERROR, format, args);
     }
 
-    // Установщик обработчика
-    public void setHandler(MessageHandler handler) {
-        this.handler = handler;
+    public void warning(String message){
+        log(LogLevel.WARNING, message);
     }
 
-    private String formatTimestamp() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
-        return dateFormat.format(new Date());
+    public void warning(String format, Object... args){
+        log(LogLevel.WARNING, format, args);
     }
 
-    private void logInternal(Level level, String message) throws IOException {
-        if (level.ordinal() >= this.level.ordinal()) {
-            String formatted = String.format("[%s] %s %s - %s",
-                    level, formatTimestamp(), name, message);
-
-            if (handler != null) {
-                handler.publish(formatted);
-            } else {
-                System.out.println(formatted); // Резерв
-            }
-        }
+    public void info(String message){
+        log(LogLevel.INFO, message);
     }
 
-    public void log(Level level, String message) {
-        try {
-            logInternal(level, message);
-        } catch (IOException e) {
-            System.err.println("Ошибка записи лога: " + e.getMessage());
-        }
+    public void info(String format, Object... args){
+        log(LogLevel.INFO, format, args);
     }
 
-    public void log(Level level, String format, Object... args) {
-        try {
-            String message = String.format(format, args);
-            logInternal(level, message);
-        } catch (IOException e) {
-            System.err.println("Ошибка записи лога: " + e.getMessage());
-        }
+    public void debug(String message){
+        log(LogLevel.DEBUG, message);
     }
 
-    public MessageHandler getHandler() {
-        return this.handler;
+    public void debug(String format, Object... args){
+        log(LogLevel.DEBUG, format, args);
     }
 
+    private String formatMessage(LogLevel logLevel, String Message){
+        String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+        return MessageFormat.format("[{0}] {1} {2} - {3}", logLevel.name(), date, this.name, Message);
+    }
 
-    // Методы-обёртки (без изменений)
-    public void debug(String message) { log(Level.DEBUG, message); }
-    public void debug(String format, Object... args) { log(Level.DEBUG, format, args); }
-    public void info(String message) { log(Level.INFO, message); }
-    public void info(String format, Object... args) { log(Level.INFO, format, args); }
-    public void warning(String message) { log(Level.WARNING, message); }
-    public void warning(String format, Object... args) { log(Level.WARNING, format, args); }
-    public void error(String message) { log(Level.ERROR, message); }
-    public void error(String format, Object... args) { log(Level.ERROR, format, args); }
+    public void log(LogLevel logLevel, String message){
+        if(logLevel.compareTo(this.logLevel) >= 0)
+            System.out.println(formatMessage(logLevel, message));
+    }
+
+    public void log(LogLevel logLevel, String format, Object... args){
+        if(logLevel.compareTo(this.logLevel) >= 0)
+            System.out.println(formatMessage(logLevel, String.format(format, args)));
+    }
+
+    public LogLevel getLevel(){
+        return logLevel;
+    }
+
+    public void setLevel(LogLevel logLevel){
+        this.logLevel = logLevel;
+    }
 }

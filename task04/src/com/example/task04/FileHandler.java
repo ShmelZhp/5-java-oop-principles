@@ -1,33 +1,16 @@
 package com.example.task04;
-import java.io.*;
-import java.io.BufferedWriter;
+
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class FileHandler implements MessageHandler{
-
-    private final BufferedWriter writer ;
-
-    public FileHandler(String fileName) throws IOException {
-        if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя файла не может быть пустым");
-        }
-        this.writer = new BufferedWriter(new FileWriter(fileName, true));
-    }
-
+public class FileHandler implements MessageHandler {
+    //записывает сообщение в файл
     @Override
-    public void publish(String formattedMessage) throws IOException {
-        if (formattedMessage == null) {
-            throw new IllegalArgumentException("Сообщение не может быть null");
+    public void log(String message){
+        try(FileWriter writer = new FileWriter("log.txt",true)){
+            writer.write(message + "\n");
+        } catch (IOException e){
+            System.out.println(e.getMessage());
         }
-        writer.write(formattedMessage);
-        writer.newLine();
-        writer.flush();
     }
-
-    @Override
-    public void close() throws IOException{
-        writer.close();
-    }
-
 }
